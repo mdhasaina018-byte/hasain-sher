@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b1018">
+<meta name="description" content="হাসাইনের শের—শের পড়ুন, পছন্দের শের সংরক্ষণ করুন, সার্চ করুন ও শেয়ার করুন।">
+<title>হাসাইনের শের</title>
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icons/icon-192.png">
+<style>
+:root{color-scheme:dark;--bg:#080d14;--panel:#101a26;--gold:#e6bd65;--muted:#aeb8c6;--line:#2b3b4d}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#182536,var(--bg) 58%);color:#f7f2e8;font-family:system-ui,"Noto Sans Bengali",sans-serif}
+header{padding:25px 16px 18px;text-align:center;border-bottom:1px solid #263344}.logo{font-size:29px;font-weight:900;color:var(--gold);letter-spacing:2px}h1{font-size:24px;margin:5px 0}.sub{font-size:13px;color:var(--muted)}
+main{max-width:760px;margin:auto;padding:16px}.controls{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+input,button{font:inherit;border-radius:12px;border:1px solid #344256;padding:11px 13px;background:#111b28;color:#fff}input{flex:1;min-width:175px}button{cursor:pointer}button:focus,input:focus{outline:2px solid var(--gold);outline-offset:2px}.primary{background:var(--gold);color:#17120a;border-color:var(--gold);font-weight:750}
+.tabs{display:flex;gap:8px;margin:12px 0}.tabs button{flex:1}.tabs .active{border-color:var(--gold);color:var(--gold)}
+.status{font-size:12px;color:var(--muted);margin:9px 2px 14px;line-height:1.7}.poem{background:linear-gradient(145deg,#142131,#0d141e);border:1px solid var(--line);border-radius:17px;padding:18px;margin:12px 0;box-shadow:0 8px 24px #0003}.poem h2{font-size:15px;color:var(--gold);margin:0 0 11px}.body{white-space:pre-wrap;line-height:1.95;font-size:18px;overflow-wrap:anywhere}.sig{color:var(--gold);text-align:right;margin-top:12px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:15px}.actions button{font-size:13px;padding:8px 11px}.empty{text-align:center;color:var(--muted);padding:30px 10px;line-height:1.8}.footer{text-align:center;color:var(--muted);font-size:12px;padding:26px 12px}.small{font-size:12px;color:var(--muted)}
+</style></head>
+<body>
+<header><div class="logo">HS ✦</div><h1>হাসাইনের শের</h1><div class="sub">শব্দে অনুভূতি, অনুভূতিতে জীবন</div></header>
+<main>
+<div class="controls"><input id="search" type="search" placeholder="শের বা শব্দ খুঁজুন…" aria-label="শের খুঁজুন"><button class="primary" id="refresh">নতুন শের আপডেট</button></div>
+<div class="tabs"><button id="allTab" class="active">সব শের</button><button id="favTab">পছন্দের শের ♥</button></div>
+<div class="status" id="status">প্রথমবার শের নামাতে ইন্টারনেট চালু রাখুন। নামানো শের পরে অফলাইনে পড়া যাবে।</div>
+<div id="list"></div>
+</main><div class="footer">হাসাইনের শের · আপনার লেখা, আপনার অনুভূতি</div>
+<script>
+const BLOG_FEED='https://hasainahmedersher.blogspot.com/feeds/posts/default?alt=json-in-script&max-results=150&callback=bloggerFeed';
+const CACHE_KEY='hasainSherPostsV1',FAV_KEY='hasainSherFavsV1';
+let posts=[],favorites=new Set();let mode='all';
+const $=id=>document.getElementById(id);
+try{favorites=new Set(JSON.parse(localStorage.getItem(FAV_KEY)||'[]'));posts=JSON.parse(localStorage.getItem(CACHE_KEY)||'[]')}catch(e){posts=[];favorites=new Set()}
+function cleanHtml(s){const d=document.createElement('div');d.innerHTML=s||'';return (d.textContent||d.innerText||'').replace(/\u00a0/g,' ').replace(/\s+/g,' ').trim()}
+function save(){try{localStorage.setItem(CACHE_KEY,JSON.stringify(posts));localStorage.setItem(FAV_KEY,JSON.stringify([...favorites]))}catch(e){$('status').textContent='ফোনে জায়গা কম থাকায় সব লেখা সংরক্ষণ করা যায়নি।'}}
+function render(){
+ const q=$('search').value.trim().toLocaleLowerCase();
+ const arr=posts.filter(p=>(mode==='all'||favorites.has(p.id))&&(!q||(p.title+' '+p.body).toLocaleLowerCase().includes(q)));
+ $('list').replaceChildren();
+ if(!arr.length){const d=document.createElement('div');d.className='empty';d.textContent=posts.length?'এই অনুসন্ধানে কোনো শের পাওয়া যায়নি।':'এখনও শের সংরক্ষিত নেই। ইন্টারনেট চালু করে “নতুন শের আপডেট” চাপুন।';$('list').append(d);return}
+ arr.forEach(p=>{
+  const card=document.createElement('article');card.className='poem';
+  const title=document.createElement('h2');title.textContent=p.title||'হাসাইনের শের';
+  const body=document.createElement('div');body.className='body';body.textContent=p.body;
+  const sig=document.createElement('div');sig.className='sig';sig.textContent='— হাসাইন';
+  const actions=document.createElement('div');actions.className='actions';
+  const fav=document.createElement('button');fav.textContent=favorites.has(p.id)?'♥ সংরক্ষিত':'♡ পছন্দে রাখুন';
+  fav.onclick=()=>{favorites.has(p.id)?favorites.delete(p.id):favorites.add(p.id);save();render()};
+  const share=document.createElement('button');share.textContent='শেয়ার / কপি';
+  share.onclick=async()=>{const text=(p.title?p.title+'\n':'')+p.body+'\n— হাসাইন';if(navigator.share){try{await navigator.share({title:'হাসাইনের শের',text})}catch(e){}}else{try{await navigator.clipboard.writeText(text);alert('শের কপি হয়েছে। এখন Facebook-এ পেস্ট করুন।')}catch(e){prompt('শের কপি করুন:',text)}}};
+  actions.append(fav,share);card.append(title,body,sig,actions);$('list').append(card);
+ });
+}
+window.bloggerFeed=function(data){
+ try{
+  const entries=(data.feed&&data.feed.entry)||[];
+  const fresh=entries.map(e=>({id:e.id.$t,title:cleanHtml(e.title&&e.title.$t),body:cleanHtml((e.content&&e.content.$t)||(e.summary&&e.summary.$t)),updated:e.updated&&e.updated.$t})).filter(p=>p.body);
+  if(fresh.length){posts=fresh;save();$('status').textContent='আপডেট সম্পন্ন: '+posts.length+'টি পোস্ট এই ফোনে সংরক্ষিত।';render()}
+  else $('status').textContent='ফিডে লেখা পাওয়া যায়নি। Blogger-এর Site feed সেটিংস পরীক্ষা করুন।';
+ }catch(e){$('status').textContent='আপডেট পড়া যায়নি। আগের সংরক্ষিত শের অফলাইনে পড়তে পারবেন।'}
+};
+function refresh(){
+ if(!navigator.onLine){$('status').textContent='ইন্টারনেট সংযোগ নেই। আগে সংরক্ষিত শের পড়তে পারবেন।';return}
+ $('status').textContent='ব্লগ থেকে শের আনা হচ্ছে…';
+ const old=document.getElementById('feedScript');if(old)old.remove();
+ const s=document.createElement('script');s.id='feedScript';s.src=BLOG_FEED+'&_='+Date.now();
+ s.onerror=()=>$('status').textContent='আপডেট হয়নি—ইন্টারনেট বা Blogger feed পরীক্ষা করুন। আগের শের সংরক্ষিত আছে।';
+ document.body.append(s);
+}
+$('search').addEventListener('input',render);$('refresh').onclick=refresh;
+$('allTab').onclick=()=>{mode='all';$('allTab').classList.add('active');$('favTab').classList.remove('active');render()};
+$('favTab').onclick=()=>{mode='fav';$('favTab').classList.add('active');$('allTab').classList.remove('active');render()};
+render();
+if('serviceWorker' in navigator && location.protocol==='https:'){navigator.serviceWorker.register('./sw.js').then(()=>{}).catch(()=>{})}
+</script></body></html>
